@@ -2,7 +2,7 @@ package hr.vinko.apr.zad1;
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		zad1();
 		System.out.println();
 		zad2();
@@ -17,7 +17,6 @@ public class Main {
 		System.out.println();
 		zad6_2();
 		System.out.println();
-
 	}
 
 	private static void zad1() {

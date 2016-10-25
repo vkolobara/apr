@@ -14,11 +14,14 @@ public class Matrix {
 	private int rows;
 	private int columns;
 
-	private static double eps = 10e-6;
+	private static double eps = 1e-6;
 	
 	private double[][] elements;
 
 	public Matrix(int rows, int cols) {
+		if (rows < 1 || cols < 1) {
+			throw new IllegalArgumentException("Dimensions must be >= 1");
+		}
 		this.rows = rows;
 		this.columns = cols;
 		this.elements = new double[rows][cols];
@@ -27,11 +30,21 @@ public class Matrix {
 
 	public Matrix(int rows, int cols, double[][] elements) {
 		this(rows, cols);
-		if (elements.length != rows * cols) {
+		
+		if (elements.length != rows) {
 			throw new IllegalArgumentException("Wrong dimensions!");
 		}
 		
-		System.arraycopy(elements, 0, this.elements, 0, elements.length);
+		for (int i=0; i<rows; i++) {
+			if (elements[i].length != cols) {
+				throw new IllegalArgumentException("Wrong dimensions!");
+			}
+			
+			for (int j=0; j<cols; j++) {
+				this.elements[i][j] = elements[i][j];
+			}
+		}
+		
 	}
 
 	public Matrix(String path) {
@@ -215,7 +228,6 @@ public class Matrix {
 		}
 
 		return e;
-
 	}
 	
 	public static Matrix[] LUDecomposition(Matrix matrix, boolean print) {
