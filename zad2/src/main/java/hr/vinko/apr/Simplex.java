@@ -1,47 +1,58 @@
 package hr.vinko.apr;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import hr.vinko.apr.zad1.Matrix;
+public class Simplex implements IAlgorithm{
 
-public class Simplex {
+	private double epsilon;
+	private double step;
+	private double alpha, beta, gamma, sigma;
 
-	public static double epsilon = 1e-6;
+	public Simplex() {
+		this(1e-6, 1, 1, 0.5, 2, 0.5);
+	}
+	
+	public Simplex(double epsilon, double step, double alpha, double beta, double gamma, double sigma) {
+		super();
+		this.epsilon = epsilon;
+		this.step = step;
+		this.alpha = alpha;
+		this.beta = beta;
+		this.gamma = gamma;
+		this.sigma = sigma;
+	}
 
-	public static Matrix simplex_algorithm(Matrix x0, double step, double alpha, double beta, double gamma,
-			double sigma, IFunction f) {
-		List<Matrix> simplex = new ArrayList<>();
-
-		simplex.add(x0);
-		for (int i = 0; i < x0.getRows(); i++) {
-			Matrix stepM = new Matrix(x0.getRows(), 1);
-			stepM.setAt(i, 0, step);
-			simplex.add(x0.add(stepM));
+	@Override
+	public double[] solve(double[] x0, IFunction f) {
+		List<double[]> simplex = new ArrayList<>();
+		simplex.add(Arrays.copyOf(x0, x0.length));
+		
+		for (int i=0; i<x0.length; i++) {
+			double[] x = Arrays.copyOf(x0, x0.length);
+			x[i] += step;
+			simplex.add(x);
 		}
 		
-		double error = Double.MAX_VALUE;
-
-		while(true) {
-
+		while (true) {
 			int l = IExtremeFinder.findExtremeIndex(simplex, f, IExtremeFinder.ExtremeType.MIN);
 			int h = IExtremeFinder.findExtremeIndex(simplex, f, IExtremeFinder.ExtremeType.MAX);
+			
+			double[] xL = Arrays.copyOf(simplex.get(l), simplex.get(l).length);
+			double[] xH = simplex.get(h);
+			
+			if (calcError(simplex, f) < epsilon) return xL;
+			
+			double[] xC = calcCentroid(simplex, h);
+			double[] xR = reflexion(xC, xH);
 
-			Matrix xL = simplex.get(l);
-
-			Matrix centroid = calcCentroid(simplex, h);
-			System.out.println("Centroid : " + centroid);
-			System.out.println("F(xC) : " + f.getValueAt(centroid));
-			System.out.println("F(xL) : " + f.getValueAt(xL));
+			System.out.println("XC = " + Arrays.toString(xC));
+			System.out.println("f(xC) = " + f.getValueAt(xC));
 			System.out.println();
 			
-			if (Math.abs(error - f.getValueAt(centroid)) < epsilon) return centroid;
-			error = f.getValueAt(centroid);
-
-			Matrix xR = reflexion(centroid, simplex.get(h), alpha);
-
 			if (f.getValueAt(xR) < f.getValueAt(xL)) {
-				Matrix xE = expansion(centroid, xR, gamma);
+				double[] xE = expansion(xC, xR);
 				if (f.getValueAt(xE) < f.getValueAt(xL)) {
 					simplex.set(h, xE);
 				} else {
@@ -49,32 +60,60 @@ public class Simplex {
 				}
 			} else {
 				if (greaterThanAll(xR, simplex, h, f)) {
-					if (f.getValueAt(xR) < f.getValueAt(simplex.get(h))) {
+					if (f.getValueAt(xR) < f.getValueAt(xH)) {
 						simplex.set(h, xR);
 					}
-					Matrix xK = contraction(centroid, simplex.get(h), beta);
-					if (f.getValueAt(xK) < f.getValueAt(simplex.get(h))) {
+					double[] xK = contraction(xC, xH);
+					if (f.getValueAt(xK) < f.getValueAt(xH)) {
 						simplex.set(h, xK);
 					} else {
-						moveTowardTheBest(simplex, xL, sigma);
+						moveTowardTheBest(simplex, xL);
 					}
 				} else {
 					simplex.set(h, xR);
 				}
 			}
 		}
+		
+	}
+	
+	private double calcError(List<double[]> simplex, IFunction f) {
+		double error = 0;
+		double[] fs = new double[simplex.size()];
+		double avg = 0;
+		for (int i=0; i<fs.length; i++) {
+			fs[i] = f.getValueAt(simplex.get(i));
+			avg += fs[i];
+		}
+		avg /= fs.length;
+		
+		for (int i=0; i<fs.length; i++) {
+			error += Math.pow(fs[i] - avg, 2);
+		}
+		
+		return error / (fs.length-1);
+	}
+
+	private void moveTowardTheBest(List<double[]> simplex, double[] xL) {
+		for (int i=0; i<simplex.size(); i++) {
+			double[] x = simplex.get(i);
+			for (int j=0; j<x.length; j++) {
+				x[j] = sigma * (x[j] + xL[j]);
+			}
+			simplex.set(i, x);
+		}
 
 	}
 
-	private static void moveTowardTheBest(List<Matrix> simplex, Matrix xL, double sigma) {
-		simplex.forEach(x -> x = x.add(xL).scalarMultiply(sigma));
+	private double[] contraction(double[] centroid, double[] xH) {
+		double[] contracted = new double[centroid.length];
+		for (int i=0; i<contracted.length; i++) {
+			contracted[i] = (1 - beta) * centroid[i] + beta * xH[i];
+		}
+		return contracted;
 	}
 
-	private static Matrix contraction(Matrix centroid, Matrix xH, double beta) {
-		return centroid.scalarMultiply(1 - beta).add(xH.scalarMultiply(beta));
-	}
-
-	private static boolean greaterThanAll(Matrix xR, List<Matrix> simplex, int h, IFunction f) {
+	private static boolean greaterThanAll(double[] xR, List<double[]> simplex, int h, IFunction f) {
 		for (int i = 0; i < simplex.size(); i++) {
 			if (i != h) {
 				if (f.getValueAt(xR) <= f.getValueAt(simplex.get(i)))
@@ -84,21 +123,37 @@ public class Simplex {
 		return true;
 	}
 
-	private static Matrix expansion(Matrix centroid, Matrix xR, double gamma) {
-		return centroid.scalarMultiply(1 - gamma).add(xR.scalarMultiply(gamma));
-	}
-
-	private static Matrix reflexion(Matrix centroid, Matrix worst, double alpha) {
-		return centroid.scalarMultiply(1 + alpha).substract(worst.scalarMultiply(alpha));
-	}
-
-	private static Matrix calcCentroid(List<Matrix> simplex, int h) {
-		Matrix centroid = new Matrix(simplex.get(0).getRows(), 1);
-		for (Matrix x : simplex) {
-			centroid = centroid.add(x);
+	private double[] expansion(double[] centroid, double[] xR) {
+		double[] expanded = new double[centroid.length];
+		for (int i=0; i<expanded.length; i++) {
+			expanded[i] = (1 - gamma) * centroid[i] + gamma * xR[i];
 		}
-		centroid = centroid.substract(simplex.get(h));
-		return centroid.scalarMultiply(1.0 / (simplex.size() - 1));
+		return expanded;
+	}
+
+	private double[] reflexion(double[] centroid, double[] worst) {
+		double[] reflected = new double[centroid.length];
+		for (int i=0; i<reflected.length; i++) {
+			reflected[i] = (1 + alpha) * centroid[i] - alpha * worst[i];
+		}
+		return reflected;
+	}
+
+	private static double[] calcCentroid(List<double[]> simplex, int h) {
+		double[] centroid = new double[simplex.get(0).length];
+		int size = simplex.size();
+		for (int i=0; i<size; i++) {
+			if (i != h) {
+				double[] x = simplex.get(i);
+				for (int j=0; j<x.length; j++) {
+					centroid[j] += x[j];
+				}
+			}
+		}
+		for (int i=0; i<centroid.length; i++) {
+			centroid[i] /= (size-1);
+		}
+		return centroid;
 	}
 
 	private interface IExtremeFinder {
@@ -106,7 +161,7 @@ public class Simplex {
 			MIN, MAX
 		}
 
-		public static int findExtremeIndex(List<Matrix> values, IFunction f, ExtremeType type) {
+		public static int findExtremeIndex(List<double[]> values, IFunction f, ExtremeType type) {
 			int index = -1;
 
 			if (type == ExtremeType.MIN) {
@@ -119,7 +174,7 @@ public class Simplex {
 					}
 				}
 			} else {
-				double max = Double.MIN_VALUE;
+				double max = -Double.MAX_VALUE;
 				for (int i = 0; i < values.size(); i++) {
 					double value = f.getValueAt(values.get(i));
 					if (value > max) {
@@ -134,4 +189,31 @@ public class Simplex {
 		}
 	}
 
+	public void setEpsilon(double epsilon) {
+		this.epsilon = epsilon;
+	}
+
+	public void setStep(double step) {
+		this.step = step;
+	}
+
+	public void setAlpha(double alpha) {
+		this.alpha = alpha;
+	}
+
+	public void setBeta(double beta) {
+		this.beta = beta;
+	}
+
+	public void setGamma(double gamma) {
+		this.gamma = gamma;
+	}
+
+	public void setSigma(double sigma) {
+		this.sigma = sigma;
+	}
+	
+	
 }
+
+

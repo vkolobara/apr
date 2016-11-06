@@ -1,13 +1,12 @@
 package hr.vinko.apr;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import hr.vinko.apr.zad1.Matrix;
-
 public abstract class AbstractFunction implements IFunction{
 
-	private Map<Matrix, Double> calculations;
+	private Map<Integer, Double> calculations;
 	private int numCalls;
 	private int dimensionality;
 	
@@ -18,19 +17,24 @@ public abstract class AbstractFunction implements IFunction{
 	}
 	
 	@Override
-	public double getValueAt(Matrix x) {
-		if (calculations.containsKey(x)) {
-			return calculations.get(x);
+	public double getValueAt(double ... x) {
+		int hashCode = Arrays.hashCode(x);
+		if (calculations.containsKey(hashCode)) {
+			return calculations.get(hashCode);
 		}
 		numCalls++;
-		calculations.put(x, funcValue(x));
-		return calculations.get(x);
+		calculations.put(hashCode, funcValue(x));
+		return calculations.get(hashCode);
+	}
+		
+	protected abstract double funcValue(double[] x);
+
+	public void clear() {
+		numCalls = 0;
+		calculations.clear();
 	}
 	
-	protected abstract double funcValue(Matrix x);
-
-	
-	public Map<Matrix, Double> getCalculations() {
+	public Map<Integer, Double> getCalculations() {
 		return calculations;
 	}
 	

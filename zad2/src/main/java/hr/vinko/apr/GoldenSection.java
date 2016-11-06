@@ -1,62 +1,81 @@
 package hr.vinko.apr;
 
-import hr.vinko.apr.zad1.Matrix;
+import java.util.Arrays;
 
-public class GoldenSection {
+public class GoldenSection implements IAlgorithm{
 
 	private final static double GOLDEN_SECTION_FACTOR = 0.5 * (Math.sqrt(5) - 1);
-	public static double EPS = 1e-6;
-
-	public static double[] golden_section_search(double x0, double h, IFunction f) {
-		double[] interval = unimodalInterval(h, x0, f);
-		return golden_section_search(interval, f);
+	private double h;
+	private double e;
+	private double[] interval;
+	
+	public GoldenSection() {
+		this(1, 1e-6);
 	}
-
-	public static double[] golden_section_search(double[] interval, IFunction f) {
-		return golden_section(interval[0], interval[1], f);
+	public GoldenSection(double h, double e){
+		this(h, e, new double[0]);
 	}
+	
+	public GoldenSection(double h, double e, double[] interval) {
+		this.h = h;
+		this.e = e;
+		this.interval = Arrays.copyOf(interval, interval.length);
+	}
+	
+	public void setE(double e) {
+		this.e = e;
+	}
+	
+	@Override
+	public double[] solve(double[] x0, IFunction f) {
+		double[] intervalToUse;
+		if (interval == null || interval.length != 2) {
+			intervalToUse = unimodalInterval(x0[0], f);
+		} else {
+			intervalToUse = interval;
+		}
 
-	private static double[] golden_section(double a, double b, IFunction f) {
-
+		double a = intervalToUse[0];
+		double b = intervalToUse[1];
+		
 		double c = b - GOLDEN_SECTION_FACTOR * (b - a);
 		double d = a + GOLDEN_SECTION_FACTOR * (b - a);
-
-		double fc = f.getValueAt(new Matrix(1, 1, new double[][] { { c } }));
-		double fd = f.getValueAt(new Matrix(1, 1, new double[][] { { d } }));
-
-		while (Math.abs(b - a) > EPS) {
-			System.out.println(a + " | " + b + " | " + c + " | " + d);
+		
+		double fc = f.getValueAt(c);
+		double fd = f.getValueAt(d);
+		while (b - a > e) {
 			if (fc < fd) {
 				b = d;
 				d = c;
 				c = b - GOLDEN_SECTION_FACTOR * (b - a);
 				fd = fc;
-				fc = f.getValueAt(new Matrix(1, 1, new double[][] { { c } }));
+				fc = f.getValueAt(c);
 			} else {
 				a = c;
 				c = d;
 				d = a + GOLDEN_SECTION_FACTOR * (b - a);
 				fc = fd;
-				fd = f.getValueAt(new Matrix(1, 1, new double[][] { { d } }));
+				fd = f.getValueAt(d);
 			}
+			System.out.println(a + "\t|\t" + c + "\t|\t" + d + "\t|\t" + b);
 		}
 
+		
 		return new double[] { a, b };
+		
 	}
 
-	private static double[] unimodalInterval(double h, double x0, IFunction f) {
+	private double[] unimodalInterval(double x0, IFunction f) {
 		double l = x0 - h;
 		double r = x0 + h;
-		int step = 1;
+		int step = 1; 
 
 		double m = x0;
 		double fl, fm, fr;
 
-		fm = f.getValueAt(new Matrix(1, 1, new double[][] { { x0 } }));
-		fl = f.getValueAt(new Matrix(1, 1, new double[][] { { l } }));
-		fr = f.getValueAt(new Matrix(1, 1, new double[][] { { r } }));
-
-		System.out.println(fl + "|" + fm + "|" + fr);
+		fm = f.getValueAt(x0);
+		fl = f.getValueAt(l);
+		fr = f.getValueAt(r);
 
 		if (fm > fr) {
 			do {
@@ -64,7 +83,7 @@ public class GoldenSection {
 				m = r;
 				fm = fr;
 				r = x0 + h * (step *= 2);
-				fr = f.getValueAt(new Matrix(1, 1, new double[][] { { r } }));
+				fr = f.getValueAt(r);
 			} while (fm > fr);
 		} else if (fm > fl) {
 			do {
@@ -72,11 +91,17 @@ public class GoldenSection {
 				m = l;
 				fm = fl;
 				l = x0 - h * (step *= 2);
-				fl = f.getValueAt(new Matrix(1, 1, new double[][] { { l } }));
+				fl = f.getValueAt(l);
 			} while (fm > fl);
 		}
 
+		System.out.println("===============================================");
+		System.out.println("UNIMODAL INTERVAL");
+		System.out.println("[" + l  + "," + r + "]");
+		System.out.println("===============================================");
+
 		return new double[] { l, r };
 	}
+
 
 }
