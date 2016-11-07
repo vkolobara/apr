@@ -35,21 +35,31 @@ public class Simplex implements IAlgorithm{
 			simplex.add(x);
 		}
 		
+		int errorIts = 0;
+		double error = 0;
+		int it = 0;
+		
 		while (true) {
 			int l = IExtremeFinder.findExtremeIndex(simplex, f, IExtremeFinder.ExtremeType.MIN);
 			int h = IExtremeFinder.findExtremeIndex(simplex, f, IExtremeFinder.ExtremeType.MAX);
 			
 			double[] xL = Arrays.copyOf(simplex.get(l), simplex.get(l).length);
-			double[] xH = simplex.get(h);
-			
-			if (calcError(simplex, f) < epsilon) return xL;
 			
 			double[] xC = calcCentroid(simplex, h);
-			double[] xR = reflexion(xC, xH);
+			double[] xR = reflexion(xC, simplex.get(h));
 
+			double newError = calcError(simplex, xC, f);
+			if (Math.abs(error - newError) <= epsilon) errorIts++;
+			else errorIts = 0;
+			System.out.println(it++);
 			System.out.println("XC = " + Arrays.toString(xC));
 			System.out.println("f(xC) = " + f.getValueAt(xC));
 			System.out.println();
+			
+			if (errorIts == 100) return xL;
+			
+			error = newError;
+			if (error <= epsilon) return xL;
 			
 			if (f.getValueAt(xR) < f.getValueAt(xL)) {
 				double[] xE = expansion(xC, xR);
@@ -60,38 +70,33 @@ public class Simplex implements IAlgorithm{
 				}
 			} else {
 				if (greaterThanAll(xR, simplex, h, f)) {
-					if (f.getValueAt(xR) < f.getValueAt(xH)) {
+					if (f.getValueAt(xR) < f.getValueAt(simplex.get(h))) {
 						simplex.set(h, xR);
 					}
-					double[] xK = contraction(xC, xH);
-					if (f.getValueAt(xK) < f.getValueAt(xH)) {
+					double[] xK = contraction(xC, simplex.get(h));
+					if (f.getValueAt(xK) < f.getValueAt(simplex.get(h))) {
 						simplex.set(h, xK);
 					} else {
 						moveTowardTheBest(simplex, xL);
+						simplex.forEach(x -> System.out.println(Arrays.toString(x)));
 					}
 				} else {
 					simplex.set(h, xR);
 				}
 			}
+			
 		}
 		
 	}
 	
-	private double calcError(List<double[]> simplex, IFunction f) {
+	private double calcError(List<double[]> simplex, double[] xC, IFunction f) {
 		double error = 0;
-		double[] fs = new double[simplex.size()];
-		double avg = 0;
-		for (int i=0; i<fs.length; i++) {
-			fs[i] = f.getValueAt(simplex.get(i));
-			avg += fs[i];
-		}
-		avg /= fs.length;
-		
-		for (int i=0; i<fs.length; i++) {
-			error += Math.pow(fs[i] - avg, 2);
+		for (int i=0; i<simplex.size(); i++) {
+			error += Math.pow(f.getValueAt(simplex.get(i)) - f.getValueAt(xC), 2);
 		}
 		
-		return error / (fs.length-1);
+		error /= simplex.size()-1;
+		return Math.sqrt(error);
 	}
 
 	private void moveTowardTheBest(List<double[]> simplex, double[] xL) {

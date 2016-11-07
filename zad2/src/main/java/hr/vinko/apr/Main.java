@@ -71,24 +71,34 @@ public class Main {
 				// NO-OP
 			}
 		});
-
 		System.setOut(dummyStream);
-
+		
 		Random rand = new Random();
 		AbstractFunction f6 = generateF6(2);
 		Simplex simplex = new Simplex();
+		HookeJeves hj = new HookeJeves(2);
 
 		double[] x0 = new double[2];
-
-		x0[0] = rand.nextDouble() * (100) - 50;
-		x0[1] = rand.nextDouble() * (100) - 50;
-
-		double[] min = simplex.solve(x0, f6);
-		System.err.println(Arrays.toString(x0));
-		System.err.println(Arrays.toString(min));
-		System.err.println(f6.getNumCalls());
-		System.err.println(f6.getValueAt(x0));
-		f6.clear();
+		int counter = 0;
+		
+		for (int i=0; i<10000; i++) {
+			x0[0] = rand.nextDouble() * (100) - 50;
+			x0[1] = rand.nextDouble() * (100) - 50;
+			
+//			x0 = new double[]{26.790250206093546, 37.43960327747148};
+//			x0 = new double[]{10, 10};
+			
+			double[] min = hj.solve(x0, f6);
+			System.err.println(Arrays.toString(x0));
+			System.err.println(Arrays.toString(min));
+			System.err.println(f6.getNumCalls());
+			System.err.println(f6.getValueAt(min));
+			
+			if (f6.getValueAt(min) <= 1e-4) counter++;
+			f6.clear();			
+		}
+		System.err.println(counter);
+		System.err.println("P = " + 1.0 * counter / 10_000);
 
 	}
 
