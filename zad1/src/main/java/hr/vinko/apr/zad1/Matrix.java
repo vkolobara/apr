@@ -83,6 +83,19 @@ public class Matrix {
 		elements = tmp.toArray(new double[][] {});
 
 	}
+	
+	public double[] getRow(int index) {
+		return elements[index];
+	}
+	
+	public double[] getColumn(int index) {
+		double[] ret = new double[rows];
+		for (int i=0; i<rows; i++) {
+			ret[i] = elements[i][index];
+		}
+		
+		return ret;
+	}
 
 	public double getAt(int row, int col) {
 		if (row > rows || col > columns) {
