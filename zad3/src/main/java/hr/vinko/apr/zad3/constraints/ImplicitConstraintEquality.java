@@ -10,7 +10,7 @@ public class ImplicitConstraintEquality extends ImplicitConstraint {
 
   @Override
   public boolean check(double[] x) {
-    return Math.abs(f.getValueAt(x)) < 10-6;
+    return Math.abs(f.getValueAt(x)) < 1e-6;
   }
 
 }

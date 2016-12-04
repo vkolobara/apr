@@ -25,9 +25,6 @@ public abstract class AbstractFunction implements IFunction {
   protected abstract double[] getDValue(double[] x);
   protected abstract double[][] getHValue(double[] x);
 
-  
-
-
   @Override
   public double[] getDerivationAt(double[] x) {
     int hash = Arrays.hashCode(x);
@@ -83,6 +80,16 @@ public abstract class AbstractFunction implements IFunction {
    */
   public int getHessianCounter() {
     return hessianCounter;
+  }
+  
+  public void clear() {
+	  hMap.clear();
+	  dMap.clear();
+	  fMap.clear();
+	  
+	  valueCounter = derivationCounter = hessianCounter = 0;
+	  
+	  
   }
 
 }

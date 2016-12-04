@@ -39,7 +39,10 @@ public class GradientDescent implements IAlgorithm {
       }
       currIters++;
 
-      if (currIters >= iterWithoutProgress) break;
+      if (currIters >= iterWithoutProgress) {
+    	  System.err.println("NO PROGRESS!");
+    	  break;
+      }
 
       double[] grad = f.getDerivationAt(xCur);
       double lambda = -1;
