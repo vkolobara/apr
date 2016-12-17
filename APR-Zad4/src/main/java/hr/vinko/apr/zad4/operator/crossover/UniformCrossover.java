@@ -7,10 +7,11 @@ public class UniformCrossover implements ICrossover<BitVectorSolution> {
 	@Override
 	public BitVectorSolution mate(BitVectorSolution parent1, BitVectorSolution parent2) {
 
-		BitVectorSolution child = (BitVectorSolution) parent1.duplicate();
-
+		BitVectorSolution child = (BitVectorSolution) parent1.newLikeThis();
 		for (int i = 0; i < child.solution.length; i++) {
 			if (rand.nextBoolean()) {
+				child.solution[i] = parent1.solution[i];
+			} else {
 				child.solution[i] = parent2.solution[i];
 			}
 		}

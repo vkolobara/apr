@@ -1,6 +1,8 @@
 package hr.vinko.apr.zad4.population;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import hr.vinko.apr.zad4.fitness.FitnessType;
@@ -10,13 +12,13 @@ import hr.vinko.apr.zad4.solution.ISolution;
 
 public class Population<T extends ISolution<?>> {
 
-	private Set<T> population;
+	private List<T> population;
 	private int popSize;
 
 	public Population(int popSize) {
 		super();
 		this.popSize = popSize;
-		population = new HashSet<>();
+		population = new ArrayList<>();
 	}
 	
 	public boolean isFull() {
@@ -31,13 +33,13 @@ public class Population<T extends ISolution<?>> {
 		return population.remove(solution);
 	}
 	
-	public Set<T> getPopulation() {
+	public List<T> getPopulation() {
 		return population;
 	}
 	
 	public T getBest(FitnessType fitnessType) {
 
-		int mult = FitnessType.FITNESS_MAX.equals(fitnessType) ? -1 : 1;
+		int mult = FitnessType.FITNESS_MAX.equals(fitnessType) ? 1 : -1;
 		return population.parallelStream().max((sol1, sol2) -> {
 			return mult * Double.compare(sol1.getFitness(), sol2.getFitness());
 		}).get();
@@ -46,7 +48,7 @@ public class Population<T extends ISolution<?>> {
 	
 	public T getWorst(FitnessType fitnessType) {
 
-		int mult = FitnessType.FITNESS_MAX.equals(fitnessType) ? 1 : -1;
+		int mult = FitnessType.FITNESS_MAX.equals(fitnessType) ? -1 : 1;
 		return population.parallelStream().max((sol1, sol2) -> {
 			return mult * Double.compare(sol1.getFitness(), sol2.getFitness());
 		}).get();

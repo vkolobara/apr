@@ -31,31 +31,25 @@ public abstract class AbstractSolution<T> implements ISolution<T> {
 		this.fitness = fitness;
 	}
 
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		AbstractSolution<?> that = (AbstractSolution<?>) o;
+
+		// Probably incorrect - comparing Object[] arrays with Arrays.equals
+		return Arrays.equals(solution, that.solution);
+	}
+
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		long temp;
-		temp = Double.doubleToLongBits(fitness);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + Arrays.hashCode(solution);
-		return result;
+		return Arrays.hashCode(solution);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		AbstractSolution other = (AbstractSolution) obj;
-		if (Double.doubleToLongBits(fitness) != Double.doubleToLongBits(other.fitness))
-			return false;
-		if (!Arrays.equals(solution, other.solution))
-			return false;
-		return true;
+	public String toString() {
+		return Arrays.toString(decode());
 	}
-
 }

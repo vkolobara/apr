@@ -40,10 +40,11 @@ public class BitVectorSolution extends AbstractSolution<Boolean> {
 		for (int i = 0; i < x.length; i++) {
 			for (int index = 0; index < variableCodeLength[i]; index++) {
 				if (solution[index + offset]) {
-					x[index + offset] += Math.pow(2, variableCodeLength[i] - 1 - index - offset);
+					x[i] += Math.pow(2, variableCodeLength[i] - 1 - index);
 				}
 			}
 			offset += variableCodeLength[i];
+			x[i] = min[i] + x[i] / (Math.pow(2, variableCodeLength[i]) - 1) * (max[i] - min[i]);
 		}
 		return x;
 	}

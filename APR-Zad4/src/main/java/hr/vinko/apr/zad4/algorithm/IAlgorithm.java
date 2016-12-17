@@ -8,6 +8,6 @@ import hr.vinko.apr.zad4.solution.ISolution;
 public interface IAlgorithm<T extends ISolution<?>> {
 	static Random rand = new Random();
 
-	public T solve(AbstractFitnessFunction f);
+	public T solve(AbstractFitnessFunction f, Object ... parameters);
 
 }
