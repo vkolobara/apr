@@ -1,331 +1,455 @@
 package hr.vinko.apr.zad4;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Arrays;
+
 import hr.vinko.apr.zad4.algorithm.EliminationGABitVector;
 import hr.vinko.apr.zad4.algorithm.EliminationGAFloat;
-import hr.vinko.apr.zad4.fitness.*;
-import hr.vinko.apr.zad4.operator.crossover.*;
-import hr.vinko.apr.zad4.operator.mutation.SimpleMutation;
+import hr.vinko.apr.zad4.fitness.F1;
+import hr.vinko.apr.zad4.fitness.F3;
+import hr.vinko.apr.zad4.fitness.F6;
+import hr.vinko.apr.zad4.fitness.F7;
+import hr.vinko.apr.zad4.fitness.FitnessType;
+import hr.vinko.apr.zad4.operator.crossover.ArithmeticCrossover;
+import hr.vinko.apr.zad4.operator.crossover.HeuristicCrossover;
+import hr.vinko.apr.zad4.operator.crossover.ICrossover;
+import hr.vinko.apr.zad4.operator.crossover.UniformCrossover;
+import hr.vinko.apr.zad4.operator.crossover.XorCrossover;
 import hr.vinko.apr.zad4.operator.mutation.GaussMutation;
 import hr.vinko.apr.zad4.operator.mutation.IMutation;
+import hr.vinko.apr.zad4.operator.mutation.SimpleMutation;
 import hr.vinko.apr.zad4.operator.selection.ISelection;
 import hr.vinko.apr.zad4.operator.selection.KTournamentSelection;
 import hr.vinko.apr.zad4.solution.AbstractSolution;
-
-import java.util.Arrays;
 
 /**
  * Created by vkolobara on 17.12.16..
  */
 public class Main {
 
-    public static void main(String[] args) {
-//        zad1();
-//        zad2();
-        zad3();
-    }
+	public static void main(String[] args) throws IOException {
+		// zad1();
+		// zad2();
+		// zad3();
+		// zad4();
+		zad5();
+	}
 
-    private static void zad1() {
-        double pMFloat = 0.1;
-        double pMBit = 0.1;
-        double sigma = 10;
+	private static void zad5() throws IOException {
 
-        int maxEvaluations = 100_000;
-        double termVal = 1e-6;
-        int popSizeFloat = 100;
-        int popSizeBit = 30;
+		double pM = 0.3;
+		double sigma = 10;
 
-        int maxIter = maxEvaluations;
+		int ks[] = new int[] { 3, 5, 7, 15 };
 
-        ICrossover[] crossoversFloat = new ICrossover[]{new HeuristicCrossover(FitnessType.FITNESS_MIN), new ArithmeticCrossover()};
-        ISelection selection = new KTournamentSelection(3);
-        IMutation[] mutationsFloat = new IMutation[]{new GaussMutation(pMFloat, sigma)};
+		int maxEvaluations = 10_000;
+		double termVal = 1e-6;
+		int popSize = 100;
 
-        ICrossover[] crossoverBitVector = new ICrossover[]{new UniformCrossover(), new XorCrossover()};
-        IMutation[] mutationsBitVector = new IMutation[]{new SimpleMutation(pMBit)};
+		int maxIter = maxEvaluations;
 
-        F1 f1 = new F1();
-        F3 f3 = new F3(5);
-        F6 f6 = new F6(2);
-        F7 f7 = new F7(2);
+		F6 f6 = new F6(2);
 
-        double[] min;
-        double[] max;
-        int size;
+		double[] min;
+		double[] max;
+		int size;
 
-        int[] precision;
+		int numCalc = 10;
 
-        EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal, maxEvaluations, maxIter, popSizeFloat);
-        EliminationGABitVector gaBitVector = new EliminationGABitVector(crossoverBitVector, mutationsBitVector, selection, termVal, maxEvaluations, maxIter, popSizeBit);
-        int numCalc = 10;
+		double[][] valuesFloat = new double[ks.length][numCalc];
 
-        double[][] valuesFloat = new double[4][numCalc];
-        double[][] valuesBitVector = new double[4][numCalc];
+		int index = 0;
 
-        AbstractSolution sol;
-        int prec = 6;
+		for (int k : ks) {
+			ICrossover[] crossoversFloat = new ICrossover[] { new HeuristicCrossover(FitnessType.FITNESS_MIN),
+					new ArithmeticCrossover() };
+			ISelection selection = new KTournamentSelection(k);
+			IMutation[] mutationsFloat = new IMutation[] { new GaussMutation(pM, sigma) };
 
-        for (int i = 0; i < numCalc; i++) {
-            f1.clear();
-            f3.clear();
-            f6.clear();
-            f7.clear();
+			EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal,
+					maxEvaluations, maxIter, popSize);
+			for (int i = 0; i < numCalc; i++) {
+				f6.clear();
 
-            size = 2;
-            min = new double[size];
-            Arrays.fill(min, -50);
-            max = new double[size];
-            Arrays.fill(max, 150);
-            sol = gaFloat.solve(f1, size, min, max);
-            System.out.println("========================");
-            System.out.println("F1");
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesFloat[0][i] = sol.getFitness();
+				size = 2;
+				min = new double[size];
+				Arrays.fill(min, -50);
+				max = new double[size];
+				Arrays.fill(max, 150);
+				AbstractSolution sol = gaFloat.solve(f6, size, min, max);
+				System.out.println("========================");
+				System.out.println("F6");
+				System.out.println(sol);
+				System.out.println(sol.getFitness());
+				valuesFloat[index][i] = sol.getFitness();
+			}
+			index++;
+		}
 
-            precision = new int[size];
-            Arrays.fill(precision, prec);
+		writeStats(valuesFloat, "zad5.txt");
 
-            f1.clear();
-            sol = gaBitVector.solve(f1, precision, min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesBitVector[0][i] = sol.getFitness();
+	}
 
-            size = 5;
-            min = new double[size];
-            Arrays.fill(min, -50);
-            max = new double[size];
-            Arrays.fill(max, 150);
-            sol = gaFloat.solve(f3, size, min, max);
-            System.out.println("========================");
-            System.out.println("F3");
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesFloat[1][i] = sol.getFitness();
+	private static void zad4() throws IOException {
 
-            f3.clear();
-            precision = new int[size];
-            Arrays.fill(precision, prec);
-            sol = gaBitVector.solve(f3, precision, min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesBitVector[1][i] = sol.getFitness();
+		int[] popSizes = new int[] { 30, 50, 100, 200 };
+		double[] pMs = new double[] { 0.1, 0.3, 0.6, 0.9 };
 
-            size = 2;
-            min = new double[size];
-            Arrays.fill(min, -50);
-            max = new double[size];
-            Arrays.fill(max, 150);
-            sol = gaFloat.solve(f6, size, min, max);
-            System.out.println("========================");
-            System.out.println("F6");
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesFloat[2][i] = sol.getFitness();
+		double pMFloat = 0.1;
+		double sigma = 10;
 
-            f6.clear();
-            precision = new int[size];
-            Arrays.fill(precision, prec);
-            sol = gaBitVector.solve(f6, precision, min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesBitVector[2][i] = sol.getFitness();
+		int maxEvaluations = 10_000;
+		double termVal = 1e-6;
+		int popSizeFloat = 50;
 
-            size = 2;
-            min = new double[size];
-            Arrays.fill(min, -50);
-            max = new double[size];
-            Arrays.fill(max, 150);
-            sol = gaFloat.solve(f7, size, min, max);
-            System.out.println("========================");
-            System.out.println("F7");
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesFloat[3][i] = sol.getFitness();
+		int maxIter = maxEvaluations;
 
-            f7.clear();
-            precision = new int[size];
-            Arrays.fill(precision, prec);
-            sol = gaBitVector.solve(f7, precision, min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            valuesBitVector[3][i] = sol.getFitness();
+		F6 f6 = new F6(2);
 
-        }
+		double[] min;
+		double[] max;
+		int size;
 
+		int numCalc = 10;
 
-        int[] succFloat = new int[4];
-        int[] succBit = new int[4];
+		double[][] valuesFloat = new double[16][numCalc];
 
-        for (int i = 0; i < succFloat.length; i++) {
-            for (int j = 0; j < valuesFloat[i].length; j++) {
-                if (valuesFloat[i][j] <= 1e-6) {
-                    succFloat[i]++;
-                }
-                if (valuesBitVector[i][j] <= 1e-6) {
-                    succBit[i]++;
-                }
-            }
-        }
+		int index = 0;
 
-        System.out.println("USPJESNOST NA POJEDINIM FUNKCIJAMA (f1, f3, f6, f7)");
-        System.out.println(Arrays.toString(succFloat));
-        System.out.println(Arrays.toString(succBit));
+		for (int popSize : popSizes) {
+			for (double pM : pMs) {
+				ICrossover[] crossoversFloat = new ICrossover[] { new HeuristicCrossover(FitnessType.FITNESS_MIN),
+						new ArithmeticCrossover() };
+				ISelection selection = new KTournamentSelection(3);
+				IMutation[] mutationsFloat = new IMutation[] { new GaussMutation(pM, sigma) };
 
+				EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal,
+						maxEvaluations, maxIter, popSize);
+				for (int i = 0; i < numCalc; i++) {
+					f6.clear();
 
-    }
+					size = 2;
+					min = new double[size];
+					Arrays.fill(min, -50);
+					max = new double[size];
+					Arrays.fill(max, 150);
+					AbstractSolution sol = gaFloat.solve(f6, size, min, max);
+					System.out.println("========================");
+					System.out.println("F6");
+					System.out.println(sol);
+					System.out.println(sol.getFitness());
+					valuesFloat[index][i] = sol.getFitness();
+				}
+				index++;
+			}
+		}
 
-    private static void zad2() {
-        double pMFloat = 0.1;
-        double sigma = 10;
+		writeStats(valuesFloat, "zad4.txt");
 
-        int maxEvaluations = 100_000;
-        double termVal = 1e-6;
-        int popSizeFloat = 100;
+	}
 
-        int maxIter = maxEvaluations;
+	private static void zad1() {
+		double pMFloat = 0.2;
+		double pMBit = 0.001;
+		double sigma = 10;
 
-        ICrossover[] crossoversFloat = new ICrossover[]{new HeuristicCrossover(FitnessType.FITNESS_MIN), new ArithmeticCrossover()};
-        ISelection selection = new KTournamentSelection(3);
-        IMutation[] mutationsFloat = new IMutation[]{new GaussMutation(pMFloat, sigma)};
-        int[] dimensions = new int[]{1, 3, 6, 10};
+		int maxEvaluations = 100_000;
+		double termVal = 1e-6;
+		int popSizeFloat = 50;
+		int popSizeBit = 30;
 
-        double[] min, max;
-        AbstractSolution sol;
+		int maxIter = maxEvaluations;
 
-        EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal, maxEvaluations, maxIter, popSizeFloat);
+		ICrossover[] crossoversFloat = new ICrossover[] { new HeuristicCrossover(FitnessType.FITNESS_MIN),
+				new ArithmeticCrossover() };
+		ISelection selection = new KTournamentSelection(3);
+		IMutation[] mutationsFloat = new IMutation[] { new GaussMutation(pMFloat, sigma) };
 
-        for (int i = 0; i < dimensions.length; i++) {
-            System.out.println("Dimensionality: " + dimensions[i]);
-            F6 f6 = new F6(dimensions[i]);
-            F7 f7 = new F7(dimensions[i]);
+		ICrossover[] crossoverBitVector = new ICrossover[] { new UniformCrossover(), new XorCrossover() };
+		IMutation[] mutationsBitVector = new IMutation[] { new SimpleMutation(pMBit) };
 
-            min = new double[dimensions[i]];
-            Arrays.fill(min, -50);
-            max = new double[dimensions[i]];
-            Arrays.fill(max, 150);
-            sol = gaFloat.solve(f6, dimensions[i], min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-            sol = gaFloat.solve(f7, dimensions[i], min, max);
-            System.out.println(sol);
-            System.out.println(sol.getFitness());
-        }
+		F1 f1 = new F1();
+		F3 f3 = new F3(5);
+		F6 f6 = new F6(2);
+		F7 f7 = new F7(2);
 
+		double[] min;
+		double[] max;
+		int size;
 
-    }
+		int[] precision;
 
-    private static void zad3() {
-        double pMFloat = 0.3;
-        double pMBit = 0.001;
-        double sigma = 10;
+		EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal,
+				maxEvaluations, maxIter, popSizeFloat);
+		EliminationGABitVector gaBitVector = new EliminationGABitVector(crossoverBitVector, mutationsBitVector,
+				selection, termVal, maxEvaluations, maxIter, popSizeBit);
+		int numCalc = 10;
 
-        int maxEvaluations = 10_000;
-        double termVal = 1e-6;
-        int popSizeFloat = 100;
-        int popSizeBit = 30;
+		double[][] valuesFloat = new double[4][numCalc];
+		double[][] valuesBitVector = new double[4][numCalc];
 
-        int maxIter = maxEvaluations;
+		AbstractSolution sol;
+		int prec = 6;
 
-        ICrossover[] crossoversFloat = new ICrossover[]{new HeuristicCrossover(FitnessType.FITNESS_MIN), new ArithmeticCrossover()};
-        ISelection selection = new KTournamentSelection(3);
-        IMutation[] mutationsFloat = new IMutation[]{new GaussMutation(pMFloat, sigma)};
+		for (int i = 0; i < numCalc; i++) {
+			f1.clear();
+			f3.clear();
+			f6.clear();
+			f7.clear();
 
-        ICrossover[] crossoverBitVector = new ICrossover[]{new UniformCrossover(), new XorCrossover()};
-        IMutation[] mutationsBitVector = new IMutation[]{new SimpleMutation(pMBit)};
+			size = 2;
+			min = new double[size];
+			Arrays.fill(min, -50);
+			max = new double[size];
+			Arrays.fill(max, 150);
+			sol = gaFloat.solve(f1, size, min, max);
+			System.out.println("========================");
+			System.out.println("F1");
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesFloat[0][i] = sol.getFitness();
 
-        F6 f6 = new F6(2);
-        F7 f7 = new F7(2);
+			precision = new int[size];
+			Arrays.fill(precision, prec);
 
-        double[] min;
-        double[] max;
-        int size;
+			f1.clear();
+			sol = gaBitVector.solve(f1, precision, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesBitVector[0][i] = sol.getFitness();
 
-        int[] precision;
+			size = 5;
+			min = new double[size];
+			Arrays.fill(min, -50);
+			max = new double[size];
+			Arrays.fill(max, 150);
+			sol = gaFloat.solve(f3, size, min, max);
+			System.out.println("========================");
+			System.out.println("F3");
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesFloat[1][i] = sol.getFitness();
 
-        EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal, maxEvaluations, maxIter, popSizeFloat);
-        EliminationGABitVector gaBitVector = new EliminationGABitVector(crossoverBitVector, mutationsBitVector, selection, termVal, maxEvaluations, maxIter, popSizeBit);
-        int numCalc = 10;
+			f3.clear();
+			precision = new int[size];
+			Arrays.fill(precision, prec);
+			sol = gaBitVector.solve(f3, precision, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesBitVector[1][i] = sol.getFitness();
 
-        double[][] valuesFloat = new double[4][numCalc];
-        double[][] valuesBitVector = new double[4][numCalc];
+			size = 2;
+			min = new double[size];
+			Arrays.fill(min, -50);
+			max = new double[size];
+			Arrays.fill(max, 150);
+			sol = gaFloat.solve(f6, size, min, max);
+			System.out.println("========================");
+			System.out.println("F6");
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesFloat[2][i] = sol.getFitness();
 
-        AbstractSolution sol;
-        int prec = 4;
+			f6.clear();
+			precision = new int[size];
+			Arrays.fill(precision, prec);
+			sol = gaBitVector.solve(f6, precision, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesBitVector[2][i] = sol.getFitness();
 
-        int[] sizes = new int[]{3, 6};
+			size = 2;
+			min = new double[size];
+			Arrays.fill(min, -50);
+			max = new double[size];
+			Arrays.fill(max, 150);
+			sol = gaFloat.solve(f7, size, min, max);
+			System.out.println("========================");
+			System.out.println("F7");
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesFloat[3][i] = sol.getFitness();
 
-        for (int i = 0; i < numCalc; i++) {
-            f6.clear();
-            f7.clear();
+			f7.clear();
+			precision = new int[size];
+			Arrays.fill(precision, prec);
+			sol = gaBitVector.solve(f7, precision, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			valuesBitVector[3][i] = sol.getFitness();
 
-            for (int j=0; j<sizes.length; j++) {
+		}
 
-                size = sizes[j];
-                min = new double[size];
-                Arrays.fill(min, -50);
-                max = new double[size];
-                Arrays.fill(max, 150);
-                sol = gaFloat.solve(f6, size, min, max);
-                System.out.println("========================");
-                System.out.println("F6");
-                System.out.println(sol);
-                System.out.println(sol.getFitness());
-                valuesFloat[2][i] = sol.getFitness();
+		int[] succFloat = new int[4];
+		int[] succBit = new int[4];
 
-                f6.clear();
-                precision = new int[size];
-                Arrays.fill(precision, prec);
-                sol = gaBitVector.solve(f6, precision, min, max);
-                System.out.println(sol);
-                System.out.println(sol.getFitness());
-                valuesBitVector[2][i] = sol.getFitness();
+		for (int i = 0; i < succFloat.length; i++) {
+			for (int j = 0; j < valuesFloat[i].length; j++) {
+				if (valuesFloat[i][j] <= 1e-6) {
+					succFloat[i]++;
+				}
+				if (valuesBitVector[i][j] <= 1e-6) {
+					succBit[i]++;
+				}
+			}
+		}
 
-                size = sizes[j];
-                min = new double[size];
-                Arrays.fill(min, -50);
-                max = new double[size];
-                Arrays.fill(max, 150);
-                sol = gaFloat.solve(f7, size, min, max);
-                System.out.println("========================");
-                System.out.println("F7");
-                System.out.println(sol);
-                System.out.println(sol.getFitness());
-                valuesFloat[3][i] = sol.getFitness();
+		System.out.println("USPJESNOST NA POJEDINIM FUNKCIJAMA (f1, f3, f6, f7)");
+		System.out.println(Arrays.toString(succFloat));
+		System.out.println(Arrays.toString(succBit));
 
-                f7.clear();
-                precision = new int[size];
-                Arrays.fill(precision, prec);
-                sol = gaBitVector.solve(f7, precision, min, max);
-                System.out.println(sol);
-                System.out.println(sol.getFitness());
-                valuesBitVector[3][i] = sol.getFitness();
-            }
-        }
+	}
 
-        //TODO zapisi u datoteku
+	private static void zad2() {
+		double pMFloat = 0.1;
+		double sigma = 10;
 
-        int[] succFloat = new int[4];
-        int[] succBit = new int[4];
+		int maxEvaluations = 100_000;
+		double termVal = 1e-6;
+		int popSizeFloat = 100;
 
-        for (int i = 0; i < succFloat.length; i++) {
-            for (int j = 0; j < valuesFloat[i].length; j++) {
-                if (valuesFloat[i][j] <= 1e-6) {
-                    succFloat[i]++;
-                }
-                if (valuesBitVector[i][j] <= 1e-6) {
-                    succBit[i]++;
-                }
-            }
-        }
+		int maxIter = maxEvaluations;
 
-        System.out.println("USPJESNOST NA POJEDINIM FUNKCIJAMA (f1, f3, f6, f7)");
-        System.out.println(Arrays.toString(succFloat));
-        System.out.println(Arrays.toString(succBit));
-    }
+		ICrossover[] crossoversFloat = new ICrossover[] { new HeuristicCrossover(FitnessType.FITNESS_MIN),
+				new ArithmeticCrossover() };
+		ISelection selection = new KTournamentSelection(3);
+		IMutation[] mutationsFloat = new IMutation[] { new GaussMutation(pMFloat, sigma) };
+		int[] dimensions = new int[] { 1, 3, 6, 10 };
 
-    private void writeStats(double[][] values, String filePath) {
+		double[] min, max;
+		AbstractSolution sol;
 
+		EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal,
+				maxEvaluations, maxIter, popSizeFloat);
 
-    }
+		for (int dimension : dimensions) {
+			System.out.println("Dimensionality: " + dimension);
+			F6 f6 = new F6(dimension);
+			F7 f7 = new F7(dimension);
+
+			min = new double[dimension];
+			Arrays.fill(min, -50);
+			max = new double[dimension];
+			Arrays.fill(max, 150);
+			sol = gaFloat.solve(f6, dimension, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+			sol = gaFloat.solve(f7, dimension, min, max);
+			System.out.println(sol);
+			System.out.println(sol.getFitness());
+		}
+
+	}
+
+	private static void zad3() throws IOException {
+		double pMFloat = 0.1;
+		double pMBit = 0.001;
+		double sigma = 10;
+
+		int maxEvaluations = 10_000;
+		double termVal = 1e-6;
+		int popSizeFloat = 50;
+		int popSizeBit = 50;
+
+		int maxIter = maxEvaluations;
+
+		ICrossover[] crossoversFloat = new ICrossover[] { new HeuristicCrossover(FitnessType.FITNESS_MIN),
+				new ArithmeticCrossover() };
+		ISelection selection = new KTournamentSelection(3);
+		IMutation[] mutationsFloat = new IMutation[] { new GaussMutation(pMFloat, sigma) };
+
+		ICrossover[] crossoverBitVector = new ICrossover[] { new UniformCrossover(), new XorCrossover() };
+		IMutation[] mutationsBitVector = new IMutation[] { new SimpleMutation(pMBit) };
+
+		F6 f6 = new F6(2);
+		F7 f7 = new F7(2);
+
+		double[] min;
+		double[] max;
+		int size;
+
+		int[] precision;
+
+		EliminationGAFloat gaFloat = new EliminationGAFloat(crossoversFloat, mutationsFloat, selection, termVal,
+				maxEvaluations, maxIter, popSizeFloat);
+		EliminationGABitVector gaBitVector = new EliminationGABitVector(crossoverBitVector, mutationsBitVector,
+				selection, termVal, maxEvaluations, maxIter, popSizeBit);
+		int numCalc = 10;
+
+		double[][] valuesFloat = new double[2][numCalc];
+		double[][] valuesBitVector = new double[2][numCalc];
+
+		AbstractSolution sol;
+		int prec = 4;
+
+		int[] sizes = new int[] { 3, 6 };
+
+		for (int i = 0; i < numCalc; i++) {
+			f6.clear();
+			f7.clear();
+
+			for (int size2 : sizes) {
+
+				size = size2;
+				min = new double[size];
+				Arrays.fill(min, -50);
+				max = new double[size];
+				Arrays.fill(max, 150);
+				sol = gaFloat.solve(f6, size, min, max);
+				System.out.println("========================");
+				System.out.println("F6");
+				System.out.println(sol);
+				System.out.println(sol.getFitness());
+				valuesFloat[0][i] = sol.getFitness();
+
+				f6.clear();
+				precision = new int[size];
+				Arrays.fill(precision, prec);
+				sol = gaBitVector.solve(f6, precision, min, max);
+				System.out.println(sol);
+				System.out.println(sol.getFitness());
+				valuesBitVector[0][i] = sol.getFitness();
+
+				size = size2;
+				min = new double[size];
+				Arrays.fill(min, -50);
+				max = new double[size];
+				Arrays.fill(max, 150);
+				sol = gaFloat.solve(f7, size, min, max);
+				System.out.println("========================");
+				System.out.println("F7");
+				System.out.println(sol);
+				System.out.println(sol.getFitness());
+				valuesFloat[1][i] = sol.getFitness();
+
+				f7.clear();
+				precision = new int[size];
+				Arrays.fill(precision, prec);
+				sol = gaBitVector.solve(f7, precision, min, max);
+				System.out.println(sol);
+				System.out.println(sol.getFitness());
+				valuesBitVector[1][i] = sol.getFitness();
+			}
+		}
+
+		// TODO zapisi u datoteku
+		writeStats(valuesFloat, "zad3Float.txt");
+		writeStats(valuesBitVector, "zad3Bit.txt");
+
+	}
+
+	private static void writeStats(double[][] values, String filePath) throws IOException {
+		try (Writer writer = new BufferedWriter(new FileWriter(filePath))) {
+			for (int j = 0; j < values[0].length; j++) {
+				for (double[] value : values) {
+					writer.write(value[j] + ",");
+				}
+				writer.write("\n");
+			}
+
+		}
+	}
 }
