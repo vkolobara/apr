@@ -46,7 +46,7 @@ public class Matrix {
 		}
 		
 	}
-
+	
 	public Matrix(String path) {
 		List<String> lines;
 		try {
