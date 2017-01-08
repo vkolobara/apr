@@ -1,1 +1,1 @@
-octave plotStateVariables.m
+start /wait octave plotStateVariables.m

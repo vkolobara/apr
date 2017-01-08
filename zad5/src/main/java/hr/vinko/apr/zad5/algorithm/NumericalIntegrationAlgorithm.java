@@ -23,7 +23,7 @@ public class NumericalIntegrationAlgorithm {
 
 		Matrix xK = x;
 
-		double[] ts = new double[(int) (tMax / T) + 1];
+		double[] ts = new double[(int) Math.ceil(tMax / T) + 1];
 		ts[0] = 0;
 
 		double[][] points = new double[ts.length][x.getRows()];
@@ -33,10 +33,10 @@ public class NumericalIntegrationAlgorithm {
 
 		int index = 1;
 
-		for (double t = T; t <= tMax; t += T, index++) {
+		for (double t = T; t <= tMax + T; t += T, index++) {
 			xK = diffMethod.getValue(A, B, xK, t, T);
 			System.out.println(t + "\n" + xK);
-			
+
 			ts[index] = t;
 			for (int i = 0; i < xK.getRows(); i++) {
 				points[index][i] = xK.getAt(i, 0);
