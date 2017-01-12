@@ -3,6 +3,8 @@ package hr.vinko.apr.zad5.algorithm;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 import hr.vinko.apr.zad1.Matrix;
 import hr.vinko.apr.zad5.function.DifferentialEquationMethod;
@@ -23,24 +25,22 @@ public class NumericalIntegrationAlgorithm {
 
 		Matrix xK = x;
 
-		double[] ts = new double[(int) Math.ceil(tMax / T) + 1];
-		ts[0] = 0;
+		List<Double> ts = new ArrayList<>();
+		ts.add(0.);
 
-		double[][] points = new double[ts.length][x.getRows()];
-		for (int i = 0; i < x.getRows(); i++) {
-			points[0][i] = x.getAt(i, 0);
-		}
+		List<double[]> points = new ArrayList<>();
+		points.add(xK.getColumn(0));
 
 		int index = 1;
 
-		for (double t = T; t <= tMax + T; t += T, index++) {
+		for (double t = T; t < tMax + T; t += T, index++) {
 			xK = diffMethod.getValue(A, B, xK, t, T);
-			System.out.println(t + "\n" + xK);
 
-			ts[index] = t;
-			for (int i = 0; i < xK.getRows(); i++) {
-				points[index][i] = xK.getAt(i, 0);
-			}
+			if (printResult)
+				System.out.println(t + "\n" + xK);
+			
+			ts.add(t);
+			points.add(xK.getColumn(0));
 		}
 
 		if (plotResult)
@@ -48,12 +48,12 @@ public class NumericalIntegrationAlgorithm {
 
 	}
 
-	private void writeToFile(double[] ts, double[][] points) throws IOException {
+	private void writeToFile(List<Double> ts, List<double[]> points) throws IOException {
 
-		for (int i = 1; i <= points[0].length; i++) {
+		for (int i = 1; i <= points.get(0).length; i++) {
 			try (Writer writer = new FileWriter("data/var" + i + ".out")) {
-				for (int j = 0; j < ts.length; j++) {
-					writer.write(ts[j] + " " + points[j][i - 1] + "\n");
+				for (int j = 0; j < ts.size(); j++) {
+					writer.write(ts.get(j) + " " + points.get(j)[i - 1] + "\n");
 				}
 			}
 

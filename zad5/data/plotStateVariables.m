@@ -11,4 +11,3 @@ endfor
 legend(names);
 xlabel("t");
 ylabel("state variable");
-pause();
